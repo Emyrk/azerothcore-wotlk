@@ -2190,6 +2190,8 @@ void Unit::DealDamageShieldDamage(Unit* victim)
         data << uint32(i_spellProto->GetSchoolMask());
         victim->SendMessageToSet(&data, true);
 
+        sScriptMgr->OnDealMeleeDamage(nullptr, &dmgInfo, overkill > 0 ? overkill : 0);
+
         Unit::DealDamage(victim, this, damage, 0, SPELL_DIRECT_DAMAGE, i_spellProto->GetSchoolMask(), i_spellProto, true);
     }
 }
@@ -6674,6 +6676,8 @@ void Unit::RemoveAllGameObjects()
 
 void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
 {
+    sScriptMgr->OnSendSpellNonMeleeReflectLog(log, attacker);
+
     // Xinef: function for players only, placed in unit because of cosmetics
     if (!IsPlayer())
         return;
@@ -6706,6 +6710,8 @@ void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
 
 void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage* log)
 {
+    sScriptMgr->OnSendSpellNonMeleeDamageLog(log);
+
     WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16 + 4 + 4 + 4 + 1 + 4 + 4 + 1 + 1 + 4 + 4 + 1)); // we guess size
     //IF we are in cheat mode we swap absorb with damage and set damage to 0, this way we can still debug damage but our hp bar will not drop
     uint32 damage = log->damage;
@@ -6807,6 +6813,8 @@ void Unit::ProcSkillsAndAuras(Unit* actor, Unit* victim, uint32 procAttacker, ui
 
 void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo* pInfo)
 {
+    sScriptMgr->OnSendPeriodicAuraLog(this, pInfo);
+
     AuraEffect const* aura = pInfo->auraEff;
     WorldPacket data(SMSG_PERIODICAURALOG, 30);
     data << GetPackGUID();
@@ -6863,6 +6871,8 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo* pInfo)
 
 void Unit::SendSpellMiss(Unit* target, uint32 spellID, SpellMissInfo missInfo)
 {
+    sScriptMgr->OnSendSpellMiss(this, target, spellID, missInfo);
+
     WorldPacket data(SMSG_SPELLLOGMISS, (4 + 8 + 1 + 4 + 8 + 1));
     data << uint32(spellID);
     data << GetGUID();
@@ -6877,6 +6887,8 @@ void Unit::SendSpellMiss(Unit* target, uint32 spellID, SpellMissInfo missInfo)
 
 void Unit::SendSpellDamageResist(Unit* target, uint32 spellId)
 {
+    sScriptMgr->OnSendSpellDamageResist(this, target, spellId);
+
     WorldPacket data(SMSG_PROCRESIST, 8 + 8 + 4 + 1);
     data << GetGUID();
     data << target->GetGUID();
@@ -6887,6 +6899,8 @@ void Unit::SendSpellDamageResist(Unit* target, uint32 spellId)
 
 void Unit::SendSpellDamageImmune(Unit* target, uint32 spellId)
 {
+    sScriptMgr->OnSendSpellDamageImmune(this, target, spellId);
+
     WorldPacket data(SMSG_SPELLORDAMAGE_IMMUNE, 8 + 8 + 4 + 1);
     data << GetGUID();
     data << target->GetGUID();
@@ -6897,6 +6911,8 @@ void Unit::SendSpellDamageImmune(Unit* target, uint32 spellId)
 
 void Unit::SendAttackStateUpdate(CalcDamageInfo* damageInfo)
 {
+    sScriptMgr->OnSendAttackStateUpdate(damageInfo, 0);
+
     LOG_DEBUG("entities.unit", "WORLD: Sending SMSG_ATTACKERSTATEUPDATE");
 
     uint32 tmpDamage[MAX_ITEM_PROTO_DAMAGES] = { };
@@ -8352,6 +8368,8 @@ void Unit::UnsummonAllTotems(bool onDeath /*= false*/)
 
 void Unit::SendHealSpellLog(HealInfo const& healInfo, bool critical)
 {
+    sScriptMgr->OnSendHealSpellLog(healInfo, critical);
+
     uint32 overheal = healInfo.GetHeal() - healInfo.GetEffectiveHeal();
 
     // we guess size
@@ -8385,6 +8403,8 @@ int32 Unit::HealBySpell(HealInfo& healInfo, bool critical)
 
 void Unit::SendEnergizeSpellLog(Unit* victim, uint32 spellID, uint32 damage, Powers powerType)
 {
+    sScriptMgr->OnSendEnergizeSpellLog(this, victim, spellID, damage, powerType);
+
     WorldPacket data(SMSG_SPELLENERGIZELOG, (8 + 8 + 4 + 4 + 4 + 1));
     data << victim->GetPackGUID();
     data << GetPackGUID();

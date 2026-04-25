@@ -25,6 +25,11 @@
 #include <map>
 #include <vector>
 
+class Aura;
+class Object;
+class Spell;
+class WorldObject;
+
 enum GlobalHook
 {
     GLOBALHOOK_ON_ITEM_DEL_FROM_DB,
@@ -47,6 +52,10 @@ enum GlobalHook
     GLOBALHOOK_ON_INSTANCEID_REMOVED,
     GLOBALHOOK_ON_BEFORE_SET_BOSS_STATE,
     GLOBALHOOK_AFTER_INSTANCE_GAME_OBJECT_CREATE,
+    GLOBALHOOK_ON_SPELL_SEND_SPELL_GO,
+    GLOBALHOOK_ON_AURA_APPLICATION_CLIENT_UPDATE,
+    GLOBALHOOK_ON_CHANGE_UPDATE_DATA,
+    GLOBALHOOK_ON_SPELL_EXECUTE_LOG_SUMMON_OBJECT,
     GLOBALHOOK_END
 };
 
@@ -102,6 +111,12 @@ public:
 
     // Called when a gameobject is created by an instance
     virtual void AfterInstanceGameObjectCreate(Map* /*instance*/, GameObject* /*go*/) { }
+
+    // Chronicle hooks — combat log data capture
+    virtual void OnSpellSendSpellGo(Spell* /*spell*/) { }
+    virtual void OnAuraApplicationClientUpdate(Unit* /*target*/, Aura* /*aura*/, bool /*remove*/) { }
+    virtual void OnChangeUpdateData(Object* /*object*/, uint16 /*index*/, uint64 /*value*/) { }
+    virtual void OnSpellExecuteLogSummonObject(Spell* /*spell*/, WorldObject* /*obj*/) { }
 };
 
 #endif

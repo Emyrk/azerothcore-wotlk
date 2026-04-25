@@ -19,6 +19,7 @@
 #define SCRIPT_OBJECT_UNIT_SCRIPT_H_
 
 #include "ScriptObject.h"
+#include "SharedDefines.h"
 #include <vector>
 
 enum UnitHook
@@ -43,12 +44,27 @@ enum UnitHook
     UNITHOOK_ON_UNIT_ENTER_COMBAT,
     UNITHOOK_ON_UNIT_DEATH,
     UNITHOOK_ON_UNIT_SET_SHAPESHIFT_FORM,
+    UNITHOOK_ON_DEAL_MELEE_DAMAGE,
+    UNITHOOK_ON_SEND_SPELL_NON_MELEE_DAMAGE_LOG,
+    UNITHOOK_ON_SEND_ATTACK_STATE_UPDATE,
+    UNITHOOK_ON_SEND_SPELL_DAMAGE_IMMUNE,
+    UNITHOOK_ON_SEND_SPELL_MISS,
+    UNITHOOK_ON_SEND_SPELL_DAMAGE_RESIST,
+    UNITHOOK_ON_SEND_SPELL_NON_MELEE_REFLECT_LOG,
+    UNITHOOK_ON_SEND_HEAL_SPELL_LOG,
+    UNITHOOK_ON_SEND_ENERGIZE_SPELL_LOG,
+    UNITHOOK_ON_SEND_PERIODIC_AURA_LOG,
     UNITHOOK_END
 };
 
 enum ReputationRank : uint8;
 class ByteBuffer;
+class HealInfo;
 struct BuildValuesCachePosPointers;
+struct CalcDamageInfo;
+class DamageInfo;
+struct SpellNonMeleeDamage;
+struct SpellPeriodicAuraLogInfo;
 
 class UnitScript : public ScriptObject
 {
@@ -108,6 +124,18 @@ public:
     virtual void OnUnitEnterCombat(Unit* /*unit*/, Unit* /*victim*/) { }
     virtual void OnUnitDeath(Unit* /*unit*/, Unit* /*killer*/) { }
     virtual void OnUnitSetShapeshiftForm(Unit* /*unit*/, uint8 /*form*/) { }
+
+    // Chronicle hooks — combat log data capture
+    virtual void OnDealMeleeDamage(CalcDamageInfo* /*calcDamageInfo*/, DamageInfo* /*damageInfo*/, uint32 /*overkill*/) { }
+    virtual void OnSendSpellNonMeleeDamageLog(SpellNonMeleeDamage* /*log*/) { }
+    virtual void OnSendAttackStateUpdate(CalcDamageInfo* /*damageInfo*/, int32 /*overkill*/) { }
+    virtual void OnSendSpellDamageImmune(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*spellId*/) { }
+    virtual void OnSendSpellMiss(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*spellID*/, SpellMissInfo /*missInfo*/) { }
+    virtual void OnSendSpellDamageResist(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*spellId*/) { }
+    virtual void OnSendSpellNonMeleeReflectLog(SpellNonMeleeDamage* /*log*/, Unit* /*attacker*/) { }
+    virtual void OnSendHealSpellLog(HealInfo const& /*healInfo*/, bool /*critical*/) { }
+    virtual void OnSendEnergizeSpellLog(Unit* /*attacker*/, Unit* /*victim*/, uint32 /*spellID*/, uint32 /*damage*/, Powers /*powerType*/) { }
+    virtual void OnSendPeriodicAuraLog(Unit* /*victim*/, SpellPeriodicAuraLogInfo* /*pInfo*/) { }
 };
 
 #endif

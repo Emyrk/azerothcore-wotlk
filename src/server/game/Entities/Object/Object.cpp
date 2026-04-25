@@ -645,6 +645,8 @@ void Object::SetUInt32Value(uint16 index, uint32 value)
         m_uint32Values[index] = value;
         _changesMask.SetBit(index);
 
+        sScriptMgr->OnChangeUpdateData(this, index, static_cast<uint64>(value));
+
         AddToObjectUpdateIfNeeded();
     }
 }

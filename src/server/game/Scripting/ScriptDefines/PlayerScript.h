@@ -26,6 +26,7 @@
 // TODO to remove
 #include "AchievementMgr.h"
 #include "KillRewarder.h"
+#include "Player.h"
 
 enum PlayerHook
 {
@@ -217,6 +218,7 @@ enum PlayerHook
     PLAYERHOOK_ON_GIVE_REPUTATION,
     PLAYERHOOK_ON_GET_REPUTATION_PRICE_DISCOUNT,
     PLAYERHOOK_ON_LEARN_TAXI_NODE,
+    PLAYERHOOK_ON_ENVIRONMENTAL_DAMAGE,
     PLAYERHOOK_END
 };
 
@@ -836,6 +838,9 @@ public:
      * @param nodeId The id of the learned taxi node
      */
     virtual void OnPlayerLearnTaxiNode(Player const* /*player*/, uint32 /*nodeId*/) {}
+
+    // Chronicle hooks — combat log data capture
+    virtual void OnEnvironmentalDamage(Player* /*player*/, EnviromentalDamage /*type*/, uint32 /*damage*/) { }
 };
 
 #endif

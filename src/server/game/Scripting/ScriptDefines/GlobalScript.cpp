@@ -144,6 +144,26 @@ void ScriptMgr::AfterInstanceGameObjectCreate(Map* instance, GameObject* go)
     CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_AFTER_INSTANCE_GAME_OBJECT_CREATE, script->AfterInstanceGameObjectCreate(instance, go));
 }
 
+void ScriptMgr::OnSpellSendSpellGo(Spell* spell)
+{
+    CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_SPELL_SEND_SPELL_GO, script->OnSpellSendSpellGo(spell));
+}
+
+void ScriptMgr::OnAuraApplicationClientUpdate(Unit* target, Aura* aura, bool remove)
+{
+    CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_AURA_APPLICATION_CLIENT_UPDATE, script->OnAuraApplicationClientUpdate(target, aura, remove));
+}
+
+void ScriptMgr::OnChangeUpdateData(Object* object, uint16 index, uint64 value)
+{
+    CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_CHANGE_UPDATE_DATA, script->OnChangeUpdateData(object, index, value));
+}
+
+void ScriptMgr::OnSpellExecuteLogSummonObject(Spell* spell, WorldObject* obj)
+{
+    CALL_ENABLED_HOOKS(GlobalScript, GLOBALHOOK_ON_SPELL_EXECUTE_LOG_SUMMON_OBJECT, script->OnSpellExecuteLogSummonObject(spell, obj));
+}
+
 GlobalScript::GlobalScript(const char* name, std::vector<uint16> enabledHooks)
     : ScriptObject(name, GLOBALHOOK_END)
 {
