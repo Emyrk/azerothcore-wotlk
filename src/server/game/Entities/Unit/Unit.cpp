@@ -2190,6 +2190,8 @@ void Unit::DealDamageShieldDamage(Unit* victim)
         data << uint32(i_spellProto->GetSchoolMask());
         victim->SendMessageToSet(&data, true);
 
+        sScriptMgr->OnDealDamageShieldDamage(&dmgInfo, overkill > 0 ? overkill : 0);
+
         Unit::DealDamage(victim, this, damage, 0, SPELL_DIRECT_DAMAGE, i_spellProto->GetSchoolMask(), i_spellProto, true);
     }
 }
@@ -2477,6 +2479,10 @@ void Unit::CalcAbsorbResist(DamageInfo& dmgInfo, bool Splited)
         tempAbsorb = currentAbsorb;
         absorbAurEff->GetBase()->CallScriptEffectAfterAbsorbHandlers(absorbAurEff, aurApp, dmgInfo, tempAbsorb);
 
+        if (currentAbsorb > 0)
+            sScriptMgr->OnDamageAbsorbed(dmgInfo, absorbAurEff->GetSpellInfo(),
+                                          absorbAurEff->GetCaster(), currentAbsorb);
+
         // Check if our aura is using amount to count damage
         if (absorbAurEff->GetAmount() >= 0)
         {
@@ -2538,6 +2544,10 @@ void Unit::CalcAbsorbResist(DamageInfo& dmgInfo, bool Splited)
 
         tempAbsorb = currentAbsorb;
         absorbAurEff->GetBase()->CallScriptEffectAfterManaShieldHandlers(absorbAurEff, aurApp, dmgInfo, tempAbsorb);
+
+        if (currentAbsorb > 0)
+            sScriptMgr->OnDamageAbsorbed(dmgInfo, absorbAurEff->GetSpellInfo(),
+                                          absorbAurEff->GetCaster(), currentAbsorb);
 
         // Check if our aura is using amount to count damage
         if (absorbAurEff->GetAmount() >= 0)
@@ -6674,6 +6684,10 @@ void Unit::RemoveAllGameObjects()
 
 void Unit::SendSpellNonMeleeReflectLog(SpellNonMeleeDamage* log, Unit* attacker)
 {
+    // Hook before the player filter so modules see all reflects,
+    // not just player-visible ones.
+    sScriptMgr->OnSendSpellNonMeleeReflectLog(log, attacker);
+
     // Xinef: function for players only, placed in unit because of cosmetics
     if (!IsPlayer())
         return;
@@ -6748,6 +6762,7 @@ void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage* log)
     //    data << float(log->GlanceChance);
     //    data << float(log->CrushChance);
     //}
+    sScriptMgr->OnSendSpellNonMeleeDamageLog(log, overkill < 0 ? 0 : overkill);
     SendMessageToSet(&data, true);
 }
 
@@ -6807,6 +6822,8 @@ void Unit::ProcSkillsAndAuras(Unit* actor, Unit* victim, uint32 procAttacker, ui
 
 void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo* pInfo)
 {
+    sScriptMgr->OnSendPeriodicAuraLog(this, pInfo);
+
     AuraEffect const* aura = pInfo->auraEff;
     WorldPacket data(SMSG_PERIODICAURALOG, 30);
     data << GetPackGUID();
@@ -6863,6 +6880,8 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo* pInfo)
 
 void Unit::SendSpellMiss(Unit* target, uint32 spellID, SpellMissInfo missInfo)
 {
+    sScriptMgr->OnSendSpellMiss(this, target, spellID, missInfo);
+
     WorldPacket data(SMSG_SPELLLOGMISS, (4 + 8 + 1 + 4 + 8 + 1));
     data << uint32(spellID);
     data << GetGUID();
@@ -6877,6 +6896,8 @@ void Unit::SendSpellMiss(Unit* target, uint32 spellID, SpellMissInfo missInfo)
 
 void Unit::SendSpellDamageResist(Unit* target, uint32 spellId)
 {
+    sScriptMgr->OnSendSpellDamageResist(this, target, spellId);
+
     WorldPacket data(SMSG_PROCRESIST, 8 + 8 + 4 + 1);
     data << GetGUID();
     data << target->GetGUID();
@@ -6887,6 +6908,8 @@ void Unit::SendSpellDamageResist(Unit* target, uint32 spellId)
 
 void Unit::SendSpellDamageImmune(Unit* target, uint32 spellId)
 {
+    sScriptMgr->OnSendSpellDamageImmune(this, target, spellId);
+
     WorldPacket data(SMSG_SPELLORDAMAGE_IMMUNE, 8 + 8 + 4 + 1);
     data << GetGUID();
     data << target->GetGUID();
@@ -6927,6 +6950,9 @@ void Unit::SendAttackStateUpdate(CalcDamageInfo* damageInfo)
     data << uint32(tmpDamage[0] + tmpDamage[1]);                    // Full damage
     int32 overkill = tmpDamage[0] + tmpDamage[1] - damageInfo->target->GetHealth();
     data << uint32(overkill < 0 ? 0 : overkill);                    // Overkill
+
+    sScriptMgr->OnSendAttackStateUpdate(damageInfo, overkill < 0 ? 0 : overkill);
+
     data << uint8(count);                                           // Sub damage count
 
     for (uint32 i = 0; i < count; ++i)
@@ -8352,6 +8378,8 @@ void Unit::UnsummonAllTotems(bool onDeath /*= false*/)
 
 void Unit::SendHealSpellLog(HealInfo const& healInfo, bool critical)
 {
+    sScriptMgr->OnSendHealSpellLog(healInfo, critical);
+
     uint32 overheal = healInfo.GetHeal() - healInfo.GetEffectiveHeal();
 
     // we guess size
@@ -8385,6 +8413,8 @@ int32 Unit::HealBySpell(HealInfo& healInfo, bool critical)
 
 void Unit::SendEnergizeSpellLog(Unit* victim, uint32 spellID, uint32 damage, Powers powerType)
 {
+    sScriptMgr->OnSendEnergizeSpellLog(this, victim, spellID, damage, powerType);
+
     WorldPacket data(SMSG_SPELLENERGIZELOG, (8 + 8 + 4 + 4 + 4 + 1));
     data << victim->GetPackGUID();
     data << GetPackGUID();
@@ -12622,7 +12652,7 @@ void Unit::CleanupBeforeRemoveFromMap(bool finalCleanup)
         RemoveFromWorld();
 
     // Added for mod_playerbots crash fixes; cancel and remove pending events before aura/spellmod cleanup.
-    // Without this SpellEvent may be cancelled later during EventProcessor destruction after auras/spellmods 
+    // Without this SpellEvent may be cancelled later during EventProcessor destruction after auras/spellmods
     // are already removed and leading to invalid access in Player::RestoreSpellMods on logout.
     m_Events.KillAllEvents(false);
 
